@@ -1,0 +1,138 @@
+﻿@{
+    var products = ViewBag.Products as List<Product>;
+    var isUpdate = (bool?)ViewBag.IsUpdate;
+}
+<style>
+    body {
+        direction: rtl;
+    }
+</style>
+
+@{
+    if (isUpdate != null)
+    {
+        if (isUpdate.Value)
+        {
+            <p class="text-success">Update success</p>
+        }
+        else
+        {
+            <p class="text-success">Inserted success</p>
+        }
+    }
+}
+
+<a class="btn btn-primary" asp-controller="Home" asp-action="InsertProduct">Insert Product</a>
+
+<table class="table">
+
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var product in products)
+        {
+            <tr id="productRow-@(product.Id)">
+                <td>
+                    @(product.Name)
+                </td>
+
+                <td>
+                    @(product.Desc)
+                </td>
+
+                <td>
+                    @(product.Price)
+                </td>
+                <td>
+                    <a class="deleteProduct text-danger" id="@(product.Id)" productName="@(product.Name)" href="#">حذف <span style="color:#000;font-weight:bold">|</span> </a>
+                    <a asp-action="InsertProduct" asp-route-id="@(product.Id)">ویرایش</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">حذف محصول</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal();">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>آیا شما می خواهید محصول <span id="modalProductName"></span> را پاک کنید؟</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btnCloseModal">بستن</button>
+                <button type="button" id="submitDeleteProduct" class="btn btn-danger">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+
+        var deletedProductId;
+
+
+        function closeModal() {
+            $('#deleteModal').hide();
+        }
+
+        $(document).ready(function () {
+
+            $('.btnCloseModal').click(function (e) {
+                closeModal();
+            });
+
+            //1 - click submit
+            $('.deleteProduct').click(function (e) {
+                e.preventDefault();
+                $('#deleteModal').toggle();
+                var productName = $(this).attr('productName');
+                $('#modalProductName').html(productName);
+                deletedProductId = $(this).attr("id");
+            });
+
+            $('#submitDeleteProduct').click(function (e) {
+                //Delete product
+                var form = new FormData();
+
+                form.append("id", deletedProductId);
+
+                var settings = {
+                    "url": "http://localhost/Store/Home/DeleteProduct",
+                    "method": "POST",
+                    "timeout": 0,
+                    "processData": false,
+                    "mimeType": "multipart/form-data",
+                    "contentType": false,
+                    "data": form
+                };
+
+                $.ajax(settings).done(function (response) {
+                    console.log(response);
+                    $('#deleteModal').toggle();
+                    var isSuccessDeleted = JSON.parse(response).isSuccessDeleted;
+                    if (isSuccessDeleted) {
+                        $('#productRow-' + deletedProductId).remove();
+                    } else {
+                        console.log('Failed to delete!');
+                    }
+                });
+            });
+
+        });
+
+    </script>
+}

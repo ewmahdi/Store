@@ -1,0 +1,59 @@
+﻿@{
+    var product = ViewBag.Product as Product;
+}
+<form action="InsertProduct" method="post">
+    <input type="text" id="title" name="name" placeholder="Enter Product Title"  value="@(product?.Name)"/>
+    <input type="text" id="desc" name="desc" placeholder="Enter Product Description" value="@(product?.Desc)" />
+    <input type="number" id="price" name="price" placeholder="Enter Product Price" value="@(product?.Price)" />
+    <input type="hidden" id="productId" name="productId" value="@(product?.Id)"/> 
+    <input type="submit" id="submit" value="Submit to send" />
+</form>
+
+<p id="UpdateOrInsertStatus"></p>
+
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+
+            //1 - click submit
+            $('#submit').click(function (e) {
+                e.preventDefault();
+                var form = new FormData();
+                form.append("name", $('#title').val());
+                form.append("desc", $('#desc').val());
+                form.append("price", $('#price').val());
+
+           
+                var id = $('#productId').val();
+                var isUpdate = id != "";
+                if (id != "") {
+                    form.append("productId", id);
+                }
+
+                var settings = {
+                    "url": "http://localhost/Store/Home/" + (id == "" ? "InsertProduct" : "UpdateProduct"),
+                    "method": "POST",
+                    "timeout": 0,
+                    "processData": false,
+                    "mimeType": "multipart/form-data",
+                    "contentType": false,
+                    "data": form
+                };
+
+                $.ajax(settings).done(function (response) {
+                    console.log(response);
+                    var isSuccess = JSON.parse(response).isSuccess;
+                    if (isSuccess) {
+                        $('#UpdateOrInsertStatus').html('Success!');
+                        window.location.replace("http://localhost/Store/Home/?isUpdate=" + isUpdate);
+                    } else {
+                        $('#UpdateOrInsertStatus').html('Failed!');
+                    }
+                });
+            });
+
+        });
+    </script>
+}
+
